@@ -111,92 +111,23 @@
                         </svg>
                         <span>View Output Page</span>
                     </a>
-
-                    <!-- Sign Out Button (Visible when authenticated as Admin) -->
-                    <button id="btn-logout" class="hidden inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium bg-rose-50 hover:bg-rose-100 text-rose-700 transition cursor-pointer">
-                        <span>Sign Out</span>
-                    </button>
                 </div>
             </div>
         </header>
 
-        <!-- Loading Spinner State -->
-        <div id="auth-loading" class="flex-1 flex flex-col items-center justify-center p-8">
-            <div class="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
-            <p class="text-sm font-medium text-slate-600">Connecting to live sync service...</p>
-        </div>
-
         <!-- ================================================================= -->
-        <!-- SUB-VIEW 2A: LOGIN / REGISTER GATEWAY                             -->
+        <!-- MAIN ADMIN CONTROL PANEL (Direct Access — No Login Required)      -->
         <!-- ================================================================= -->
-        <main id="auth-screen" class="hidden flex-1 flex items-center justify-center p-4 sm:p-6 fade-in">
-            <div class="w-full max-w-md bg-white rounded-2xl border border-slate-200 shadow-xl shadow-slate-200/50 p-6 sm:p-8">
-                <div class="text-center mb-6">
-                    <div class="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 mb-3">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                        </svg>
-                    </div>
-                    <h2 id="auth-title" class="text-xl sm:text-2xl font-bold text-slate-900">Admin Dashboard Login</h2>
-                    <p id="auth-subtitle" class="text-sm text-slate-500 mt-1">Sign in to update the live published number.</p>
-                </div>
-
-                <!-- Quick Instant Access Option -->
-                <div class="mb-6">
-                    <button id="btn-demo-login" type="button" class="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-medium text-sm shadow-sm transition flex items-center justify-center gap-2 cursor-pointer">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                        </svg>
-                        <span>Quick Admin Access (1-Click Sign In)</span>
-                    </button>
-                    <p class="text-[11px] text-center text-slate-400 mt-2">Instant authenticated session for immediate testing</p>
-                </div>
-
-                <div class="relative flex py-2 items-center mb-6">
-                    <div class="flex-grow border-t border-slate-200"></div>
-                    <span class="flex-shrink mx-3 text-xs font-medium text-slate-400 uppercase tracking-wider">Or use Email & Password</span>
-                    <div class="flex-grow border-t border-slate-200"></div>
-                </div>
-
-                <!-- Email / Password Form -->
-                <form id="auth-form" class="space-y-4">
-                    <div>
-                        <label for="auth-email" class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Email Address</label>
-                        <input id="auth-email" type="email" required placeholder="admin@example.com" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
-                    </div>
-                    <div>
-                        <label for="auth-password" class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Password</label>
-                        <input id="auth-password" type="password" required minlength="6" placeholder="••••••••" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
-                    </div>
-
-                    <div id="auth-error" class="hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 font-medium"></div>
-
-                    <button id="btn-auth-submit" type="submit" class="w-full py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-medium text-sm transition cursor-pointer">
-                        Sign In with Email
-                    </button>
-                </form>
-
-                <div class="mt-6 text-center">
-                    <button id="btn-toggle-auth-mode" type="button" class="text-xs font-medium text-indigo-600 hover:text-indigo-800 transition cursor-pointer">
-                        Need an admin account? Register here
-                    </button>
-                </div>
-            </div>
-        </main>
-
-        <!-- ================================================================= -->
-        <!-- SUB-VIEW 2B: AUTHENTICATED ADMIN CONTROL PANEL                    -->
-        <!-- ================================================================= -->
-        <main id="admin-panel" class="hidden flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 fade-in">
+        <main id="admin-panel" class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 fade-in">
             
-            <!-- Operator Info Banner -->
+            <!-- Status & Quick Link Banner -->
             <div class="bg-white rounded-2xl border border-slate-200 p-4 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
                 <div class="flex items-center gap-3">
                     <div class="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
                     <div class="text-xs sm:text-sm text-slate-600">
-                        Logged in as <span id="admin-user-label" class="font-semibold text-slate-900">Admin</span>
+                        <span class="font-semibold text-slate-900">Instant Sync Active</span>
                         <span class="hidden md:inline text-slate-400 mx-1">&bull;</span>
-                        <span id="admin-uid-label" class="block md:inline font-mono text-[11px] text-slate-400 break-all"></span>
+                        <span class="block md:inline text-xs text-slate-500">Changes broadcast live across open tabs via local storage</span>
                     </div>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
@@ -309,53 +240,27 @@
     </div>
 
     <!-- ===================================================================== -->
-    <!-- FIREBASE & APPLICATION LOGIC                                          -->
+    <!-- CLIENT-SIDE PERSISTENCE & CROSS-TAB SYNC LOGIC                        -->
     <!-- ===================================================================== -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { 
-            getAuth, 
-            signInAnonymously, 
-            signInWithCustomToken, 
-            signInWithEmailAndPassword,
-            createUserWithEmailAndPassword,
-            signOut,
-            onAuthStateChanged 
-        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { 
-            getFirestore, 
-            doc, 
-            setDoc, 
-            addDoc,
-            collection, 
-            onSnapshot 
-        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
+    <script>
         // ---------------------------------------------------------------------
-        // 1. Firebase Initialization & Config
+        // 1. Storage Keys & BroadcastChannel Setup
         // ---------------------------------------------------------------------
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const STORAGE_STATE_KEY = 'numbersync_current_state_v1';
+        const STORAGE_HISTORY_KEY = 'numbersync_change_history_v1';
+        const CHANNEL_NAME = 'numbersync_live_channel';
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-
-        // Firestore Collection & Document References (Strict Rule 1 Paths)
-        // Public data so both Output View and Admin Dashboard read/sync the exact same document
-        const STATE_DOC_REF = doc(db, 'artifacts', appId, 'public', 'data', 'output_state', 'current');
-        const HISTORY_COL_REF = collection(db, 'artifacts', appId, 'public', 'data', 'output_history');
+        const syncChannel = typeof BroadcastChannel !== 'undefined'
+            ? new BroadcastChannel(CHANNEL_NAME)
+            : null;
 
         // ---------------------------------------------------------------------
         // 2. Application State
         // ---------------------------------------------------------------------
         let currentNumber = 0;
-        let currentUser = null;
-        let isAdminAuthenticated = false; // Tracks explicit login to Admin Dashboard
-        let isRegisterMode = false;
+        let lastUpdatedAt = null;
+        let historyItems = [];
         let isDarkOutput = false;
-        let unsubscribeState = null;
-        let unsubscribeHistory = null;
 
         // ---------------------------------------------------------------------
         // 3. DOM Elements
@@ -366,23 +271,6 @@
         const outputChrome = document.getElementById('output-chrome');
         const btnRestoreChrome = document.getElementById('btn-restore-chrome');
 
-        const authLoading = document.getElementById('auth-loading');
-        const authScreen = document.getElementById('auth-screen');
-        const adminPanel = document.getElementById('admin-panel');
-        const btnLogout = document.getElementById('btn-logout');
-
-        const authTitle = document.getElementById('auth-title');
-        const authSubtitle = document.getElementById('auth-subtitle');
-        const authForm = document.getElementById('auth-form');
-        const authEmail = document.getElementById('auth-email');
-        const authPassword = document.getElementById('auth-password');
-        const authError = document.getElementById('auth-error');
-        const btnAuthSubmit = document.getElementById('btn-auth-submit');
-        const btnToggleAuthMode = document.getElementById('btn-toggle-auth-mode');
-        const btnDemoLogin = document.getElementById('btn-demo-login');
-
-        const adminUserLabel = document.getElementById('admin-user-label');
-        const adminUidLabel = document.getElementById('admin-uid-label');
         const dashboardLiveNumber = document.getElementById('dashboard-live-number');
         const lastUpdatedBadge = document.getElementById('last-updated-badge');
         const updateNumberForm = document.getElementById('update-number-form');
@@ -396,8 +284,8 @@
         function showToast(message, type = 'success') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
-            const colors = type === 'error' 
-                ? 'bg-rose-600 text-white' 
+            const colors = type === 'error'
+                ? 'bg-rose-600 text-white'
                 : 'bg-slate-900 text-white';
             toast.className = `${colors} px-4 py-2.5 rounded-xl shadow-lg text-xs font-medium flex items-center gap-2 fade-in pointer-events-auto`;
             toast.textContent = message;
@@ -441,12 +329,155 @@
         function formatTimestamp(ms) {
             if (!ms) return 'Just now';
             const d = new Date(ms);
-            return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + 
+            return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) +
                    ' · ' + d.toLocaleDateString([], { month: 'short', day: 'numeric' });
         }
 
         // ---------------------------------------------------------------------
-        // 5. Routing Logic (#output / ?raw=1 vs #dashboard)
+        // 5. Persistence & Real-Time Cross-Tab Sync
+        // ---------------------------------------------------------------------
+        function loadFromStorage() {
+            try {
+                const rawState = localStorage.getItem(STORAGE_STATE_KEY);
+                if (rawState) {
+                    const parsed = JSON.parse(rawState);
+                    currentNumber = parsed.value !== undefined ? Number(parsed.value) : 0;
+                    lastUpdatedAt = parsed.updatedAt || null;
+                } else {
+                    currentNumber = 0;
+                    lastUpdatedAt = null;
+                }
+
+                const rawHistory = localStorage.getItem(STORAGE_HISTORY_KEY);
+                historyItems = rawHistory ? JSON.parse(rawHistory) : [];
+                if (!Array.isArray(historyItems)) historyItems = [];
+            } catch (err) {
+                console.error('Error reading localStorage:', err);
+            }
+            renderAll();
+        }
+
+        function renderAll() {
+            // Update Output View
+            rawOutputText.textContent = String(currentNumber);
+            if (isOutputRoute()) {
+                document.title = `${currentNumber} — output.txt`;
+            }
+
+            // Update Dashboard Preview
+            dashboardLiveNumber.textContent = String(currentNumber);
+            if (lastUpdatedAt) {
+                lastUpdatedBadge.textContent = `Updated ${formatTimestamp(lastUpdatedAt)}`;
+            } else {
+                lastUpdatedBadge.textContent = 'Synced';
+            }
+
+            renderHistoryList(historyItems.slice(0, 30));
+        }
+
+        function renderHistoryList(items) {
+            historyCountBadge.textContent = `${items.length} ${items.length === 1 ? 'update' : 'updates'}`;
+
+            if (items.length === 0) {
+                historyList.innerHTML = `
+                    <div class="text-center py-12 text-slate-400 text-xs">
+                        No updates recorded yet. Change the number to see history here.
+                    </div>
+                `;
+                return;
+            }
+
+            historyList.innerHTML = items.map(item => {
+                const prevText = item.previousValue !== undefined
+                    ? `<span class="text-slate-400 line-through mr-1.5">${item.previousValue}</span>&rarr;`
+                    : '';
+                return `
+                    <div class="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-3">
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-1.5 font-mono text-sm font-bold text-slate-900">
+                                ${prevText}
+                                <span class="text-indigo-600">${item.newValue}</span>
+                            </div>
+                            <div class="text-[11px] text-slate-500 truncate mt-0.5">
+                                Dashboard Update
+                            </div>
+                        </div>
+                        <div class="text-[11px] font-mono text-slate-400 whitespace-nowrap text-right">
+                            ${formatTimestamp(item.timestamp)}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function publishNewNumber(newValue) {
+            const numericVal = Number(newValue);
+            if (isNaN(numericVal)) {
+                showToast('Please enter a valid number.', 'error');
+                return;
+            }
+
+            const prevVal = currentNumber;
+            const now = Date.now();
+
+            currentNumber = numericVal;
+            lastUpdatedAt = now;
+
+            const entry = {
+                previousValue: prevVal,
+                newValue: numericVal,
+                timestamp: now
+            };
+
+            historyItems = [entry, ...historyItems].slice(0, 50);
+
+            try {
+                localStorage.setItem(STORAGE_STATE_KEY, JSON.stringify({
+                    value: currentNumber,
+                    updatedAt: lastUpdatedAt
+                }));
+                localStorage.setItem(STORAGE_HISTORY_KEY, JSON.stringify(historyItems));
+            } catch (err) {
+                console.error('Failed to write localStorage:', err);
+            }
+
+            // Broadcast immediately to any other open tabs/windows
+            if (syncChannel) {
+                syncChannel.postMessage({
+                    type: 'NUMBER_UPDATED',
+                    value: currentNumber,
+                    updatedAt: lastUpdatedAt,
+                    history: historyItems
+                });
+            }
+
+            renderAll();
+            showToast(`Output updated to ${numericVal}`);
+        }
+
+        // Listen for updates from other open tabs via BroadcastChannel
+        if (syncChannel) {
+            syncChannel.onmessage = (event) => {
+                if (event.data && event.data.type === 'NUMBER_UPDATED') {
+                    currentNumber = Number(event.data.value);
+                    lastUpdatedAt = event.data.updatedAt || Date.now();
+                    if (Array.isArray(event.data.history)) {
+                        historyItems = event.data.history;
+                    }
+                    renderAll();
+                }
+            };
+        }
+
+        // Fallback listener for cross-tab localStorage changes
+        window.addEventListener('storage', (event) => {
+            if (event.key === STORAGE_STATE_KEY || event.key === STORAGE_HISTORY_KEY) {
+                loadFromStorage();
+            }
+        });
+
+        // ---------------------------------------------------------------------
+        // 6. Routing Logic (#output / ?raw=1 vs #dashboard)
         // ---------------------------------------------------------------------
         function isOutputRoute() {
             const hash = window.location.hash.toLowerCase();
@@ -470,273 +501,16 @@
             } else {
                 outputView.classList.add('hidden');
                 dashboardView.classList.remove('hidden');
-                document.title = 'NumberSync — Admin Dashboard';
-                updateDashboardAuthUI();
+                document.title = 'NumberSync — Dashboard';
             }
         }
 
         window.addEventListener('hashchange', handleRouteChange);
 
         // ---------------------------------------------------------------------
-        // 6. Real-Time Firestore Listeners (Guarded by Auth)
+        // 7. Interactive Event Listeners
         // ---------------------------------------------------------------------
-        function startRealtimeListeners(user) {
-            if (!user) return;
 
-            // Listener 1: Current Number State
-            if (unsubscribeState) unsubscribeState();
-            unsubscribeState = onSnapshot(STATE_DOC_REF, (docSnap) => {
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    currentNumber = data.value !== undefined ? data.value : 0;
-                    
-                    // Update Output View
-                    rawOutputText.textContent = String(currentNumber);
-                    if (isOutputRoute()) {
-                        document.title = `${currentNumber} — output.txt`;
-                    }
-
-                    // Update Dashboard Preview
-                    dashboardLiveNumber.textContent = String(currentNumber);
-                    if (data.updatedAt) {
-                        lastUpdatedBadge.textContent = `Updated ${formatTimestamp(data.updatedAt)}`;
-                    }
-                } else {
-                    // Initialize default document if it doesn't exist yet
-                    setDoc(STATE_DOC_REF, {
-                        value: 0,
-                        updatedAt: Date.now(),
-                        updatedBy: 'System Init'
-                    }).catch(() => {});
-                }
-            }, (error) => {
-                console.error('Error listening to state:', error);
-            });
-
-            // Listener 2: Change History Log (Rule 2: Fetch all & sort in memory)
-            if (unsubscribeHistory) unsubscribeHistory();
-            unsubscribeHistory = onSnapshot(HISTORY_COL_REF, (querySnap) => {
-                const items = [];
-                querySnap.forEach((doc) => {
-                    items.push({ id: doc.id, ...doc.data() });
-                });
-
-                // Sort descending by timestamp in memory
-                items.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-                renderHistoryList(items.slice(0, 30));
-            }, (error) => {
-                console.error('Error listening to history:', error);
-            });
-        }
-
-        function renderHistoryList(items) {
-            historyCountBadge.textContent = `${items.length} ${items.length === 1 ? 'update' : 'updates'}`;
-
-            if (items.length === 0) {
-                historyList.innerHTML = `
-                    <div class="text-center py-12 text-slate-400 text-xs">
-                        No updates recorded yet. Change the number to see history here.
-                    </div>
-                `;
-                return;
-            }
-
-            historyList.innerHTML = items.map(item => {
-                const prevText = item.previousValue !== undefined ? `<span class="text-slate-400 line-through mr-1.5">${item.previousValue}</span>&rarr;` : '';
-                return `
-                    <div class="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-3">
-                        <div class="min-w-0">
-                            <div class="flex items-center gap-1.5 font-mono text-sm font-bold text-slate-900">
-                                ${prevText}
-                                <span class="text-indigo-600">${item.newValue}</span>
-                            </div>
-                            <div class="text-[11px] text-slate-500 truncate mt-0.5">
-                                By <span class="font-medium text-slate-700">${escapeHtml(item.updatedBy || 'Admin')}</span>
-                            </div>
-                        </div>
-                        <div class="text-[11px] font-mono text-slate-400 whitespace-nowrap text-right">
-                            ${formatTimestamp(item.timestamp)}
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function escapeHtml(str) {
-            const div = document.createElement('div');
-            div.textContent = str;
-            return div.innerHTML;
-        }
-
-        // ---------------------------------------------------------------------
-        // 7. Number Update Handler (Writes to Firestore)
-        // ---------------------------------------------------------------------
-        async function publishNewNumber(newValue) {
-            if (!currentUser || !isAdminAuthenticated) {
-                showToast('You must be signed into the Admin Dashboard to update.', 'error');
-                return;
-            }
-
-            const numericVal = Number(newValue);
-            if (isNaN(numericVal)) {
-                showToast('Please enter a valid number.', 'error');
-                return;
-            }
-
-            const prevVal = currentNumber;
-            const operatorName = currentUser.email || 'Quick Admin';
-            const now = Date.now();
-
-            try {
-                // 1. Update live state document
-                await setDoc(STATE_DOC_REF, {
-                    value: numericVal,
-                    updatedAt: now,
-                    updatedBy: operatorName,
-                    uid: currentUser.uid
-                });
-
-                // 2. Append to history collection
-                await addDoc(HISTORY_COL_REF, {
-                    previousValue: prevVal,
-                    newValue: numericVal,
-                    updatedBy: operatorName,
-                    uid: currentUser.uid,
-                    timestamp: now
-                });
-
-                showToast(`Output updated to ${numericVal}`);
-            } catch (err) {
-                console.error('Failed to update number:', err);
-                showToast('Error saving number. Please try again.', 'error');
-            }
-        }
-
-        // ---------------------------------------------------------------------
-        // 8. Authentication Flow (Rule 3: Auth Before Queries)
-        // ---------------------------------------------------------------------
-        function updateDashboardAuthUI() {
-            authLoading.classList.add('hidden');
-
-            if (isAdminAuthenticated && currentUser) {
-                authScreen.classList.add('hidden');
-                adminPanel.classList.remove('hidden');
-                btnLogout.classList.remove('hidden');
-
-                adminUserLabel.textContent = currentUser.email ? currentUser.email : 'Demo Admin Session';
-                adminUidLabel.textContent = `UID: ${currentUser.uid}`;
-            } else {
-                adminPanel.classList.add('hidden');
-                btnLogout.classList.add('hidden');
-                authScreen.classList.remove('hidden');
-            }
-        }
-
-        // Initialize Auth immediately on load so Public Output Page can read Firestore
-        async function initAuth() {
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else if (!auth.currentUser) {
-                    // Sign in anonymously in background so the public Output Page has read access
-                    await signInAnonymously(auth);
-                }
-            } catch (err) {
-                console.error('Background auth error:', err);
-            }
-        }
-
-        onAuthStateChanged(auth, (user) => {
-            currentUser = user;
-            if (user) {
-                // If user logged in via Email/Password, grant Admin Dashboard access automatically
-                if (!user.isAnonymous && user.email) {
-                    isAdminAuthenticated = true;
-                }
-                startRealtimeListeners(user);
-            }
-            handleRouteChange();
-        });
-
-        // Quick 1-Click Admin Access (Uses current authenticated Firebase session)
-        btnDemoLogin.addEventListener('click', async () => {
-            try {
-                if (!auth.currentUser) {
-                    await signInAnonymously(auth);
-                }
-                isAdminAuthenticated = true;
-                updateDashboardAuthUI();
-                showToast('Signed in with Quick Admin Access');
-            } catch (err) {
-                showToast('Could not start demo session: ' + err.message, 'error');
-            }
-        });
-
-        // Toggle Login vs Register Form
-        btnToggleAuthMode.addEventListener('click', () => {
-            isRegisterMode = !isRegisterMode;
-            authError.classList.add('hidden');
-            if (isRegisterMode) {
-                authTitle.textContent = 'Register Admin Account';
-                authSubtitle.textContent = 'Create a new email & password login for the dashboard.';
-                btnAuthSubmit.textContent = 'Create Admin Account';
-                btnToggleAuthMode.textContent = 'Already have an account? Sign in';
-            } else {
-                authTitle.textContent = 'Admin Dashboard Login';
-                authSubtitle.textContent = 'Sign in to update the live published number.';
-                btnAuthSubmit.textContent = 'Sign In with Email';
-                btnToggleAuthMode.textContent = 'Need an admin account? Register here';
-            }
-        });
-
-        // Email / Password Submit
-        authForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            authError.classList.add('hidden');
-            const email = authEmail.value.trim();
-            const password = authPassword.value;
-
-            btnAuthSubmit.disabled = true;
-            btnAuthSubmit.textContent = isRegisterMode ? 'Creating account...' : 'Signing in...';
-
-            try {
-                if (isRegisterMode) {
-                    await createUserWithEmailAndPassword(auth, email, password);
-                    showToast('Admin account created!');
-                } else {
-                    await signInWithEmailAndPassword(auth, email, password);
-                    showToast('Signed in successfully!');
-                }
-                isAdminAuthenticated = true;
-                authForm.reset();
-                updateDashboardAuthUI();
-            } catch (err) {
-                authError.textContent = err.message.replace('Firebase: ', '');
-                authError.classList.remove('hidden');
-            } finally {
-                btnAuthSubmit.disabled = false;
-                btnAuthSubmit.textContent = isRegisterMode ? 'Create Admin Account' : 'Sign In with Email';
-            }
-        });
-
-        // Sign Out from Admin Dashboard
-        btnLogout.addEventListener('click', async () => {
-            isAdminAuthenticated = false;
-            try {
-                await signOut(auth);
-                // Re-authenticate anonymously in background so Output Page remains readable
-                await signInAnonymously(auth);
-            } catch (err) {
-                console.error(err);
-            }
-            updateDashboardAuthUI();
-            showToast('Signed out of Admin Dashboard');
-        });
-
-        // ---------------------------------------------------------------------
-        // 9. Dashboard & Output Page Interactive Event Listeners
-        // ---------------------------------------------------------------------
-        
         // Direct Number Form Submit
         updateNumberForm.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -801,8 +575,9 @@
             outputChrome.classList.remove('hidden');
         });
 
-        // Boot Application
-        initAuth();
+        // Boot Application Immediately
+        loadFromStorage();
+        handleRouteChange();
     </script>
 </body>
 </html>
