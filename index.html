@@ -4,109 +4,774 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NumberSync — Admin Dashboard & Raw Output</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Inter & JetBrains Mono Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        mono: ['JetBrains Mono', 'monospace'],
-                    }
-                }
-            }
-        }
-    </script>
     <style>
-        /* Custom transitions and utility classes */
-        .fade-in {
-            animation: fadeIn 0.2s ease-in-out;
+        /* =====================================================================
+           CSS RESET & DESIGN TOKENS
+           ===================================================================== */
+        *, *::before, *::after {
+            box-sizing: border-box;
         }
+
+        :root {
+            --bg-page: #f8fafc;
+            --bg-card: #ffffff;
+            --bg-subtle: #f1f5f9;
+            --bg-subtle-hover: #e2e8f0;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --text-light: #94a3b8;
+            --border-color: #e2e8f0;
+            --border-input: #cbd5e1;
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --primary-soft: #eef2ff;
+            --primary-soft-hover: #e0e7ff;
+            --primary-border: #c7d2fe;
+            --emerald-bg: #ecfdf5;
+            --emerald-text: #047857;
+            --emerald-border: #a7f3d0;
+            --emerald-dot: #10b981;
+            --rose-bg: #fff1f2;
+            --rose-bg-hover: #ffe4e6;
+            --rose-text: #be123c;
+            --rose-border: #fecdd3;
+            --terminal-header: #0f172a;
+            --terminal-body: #020617;
+            --terminal-text: #34d399;
+            --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            --radius-sm: 0.5rem;
+            --radius-md: 0.75rem;
+            --radius-lg: 1rem;
+            --radius-full: 9999px;
+            --shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
+            --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.1), 0 4px 6px -4px rgba(15, 23, 42, 0.1);
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-sans);
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            line-height: 1.5;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(4px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        /* Hide scrollbars cleanly where needed */
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
         }
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
+
+        .fade-in {
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        /* =====================================================================
+           TOAST NOTIFICATIONS
+           ===================================================================== */
+        #toast-container {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            pointer-events: none;
+        }
+
+        .toast {
+            background-color: #0f172a;
+            color: #ffffff;
+            padding: 0.625rem 1rem;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            font-size: 0.75rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            pointer-events: auto;
+            animation: fadeIn 0.2s ease-out;
+            transition: opacity 0.2s ease;
+        }
+
+        .toast.error {
+            background-color: #e11d48;
+        }
+
+        /* =====================================================================
+           VIEW 1: RAW OUTPUT PAGE (#output or ?raw=1)
+           ===================================================================== */
+        #output-view {
+            min-height: 100vh;
+            width: 100%;
+            position: relative;
+            background-color: #ffffff;
+            color: #0f172a;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        #output-view.dark-terminal {
+            background-color: var(--terminal-body);
+            color: var(--terminal-text);
+        }
+
+        #raw-output-text {
+            font-family: var(--font-mono);
+            font-size: 1.125rem;
+            padding: 1rem;
+            margin: 0;
+            white-space: pre-wrap;
+            word-break: break-all;
+            user-select: all;
+        }
+
+        #output-chrome {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            left: 1rem;
+            max-width: fit-content;
+            margin-left: auto;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.5rem;
+            background-color: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-lg);
+            border-radius: var(--radius-md);
+            padding: 0.5rem;
+        }
+
+        #btn-restore-chrome {
+            position: fixed;
+            bottom: 0.5rem;
+            right: 0.5rem;
+            opacity: 0.2;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.7rem;
+            font-family: var(--font-mono);
+            background-color: #1e293b;
+            color: #ffffff;
+            border: none;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+        }
+
+        #btn-restore-chrome:hover,
+        #btn-restore-chrome:focus {
+            opacity: 1;
+        }
+
+        /* =====================================================================
+           VIEW 2: ADMIN DASHBOARD (#dashboard)
+           ===================================================================== */
+        #dashboard-view {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .app-header {
+            background-color: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 30;
+        }
+
+        .header-inner {
+            max-width: 72rem;
+            margin: 0 auto;
+            padding: 0 1.25rem;
+            height: 4rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .brand-logo {
+            width: 2.25rem;
+            height: 2.25rem;
+            border-radius: var(--radius-md);
+            background-color: var(--primary);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-mono);
+            font-weight: 700;
+            font-size: 1.125rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .brand-title {
+            margin: 0;
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text-main);
+            line-height: 1.2;
+        }
+
+        .brand-subtitle {
+            margin: 0;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        /* Status Badge */
+        .sync-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.3rem 0.75rem;
+            border-radius: var(--radius-full);
+            font-size: 0.75rem;
+            font-weight: 500;
+            background-color: var(--emerald-bg);
+            color: var(--emerald-text);
+            border: 1px solid var(--emerald-border);
+        }
+
+        .sync-dot {
+            width: 0.5rem;
+            height: 0.5rem;
+            border-radius: 50%;
+            background-color: var(--emerald-dot);
+            animation: pulse 2s infinite;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            padding: 0.5rem 0.875rem;
+            border-radius: var(--radius-md);
+            font-size: 0.8125rem;
+            font-weight: 500;
+            font-family: inherit;
+            text-decoration: none;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+        }
+
+        .btn:active {
+            transform: scale(0.99);
+        }
+
+        .btn-sm {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.75rem;
+            border-radius: var(--radius-sm);
+        }
+
+        .btn-lg {
+            padding: 0.75rem 1.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: #ffffff;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-subtle {
+            background-color: var(--bg-subtle);
+            color: var(--text-main);
+        }
+
+        .btn-subtle:hover {
+            background-color: var(--bg-subtle-hover);
+        }
+
+        .btn-outline {
+            background-color: var(--bg-card);
+            border-color: var(--border-color);
+            color: var(--text-main);
+        }
+
+        .btn-outline:hover {
+            background-color: var(--bg-subtle);
+        }
+
+        .btn-soft-indigo {
+            background-color: var(--primary-soft);
+            border-color: var(--primary-border);
+            color: var(--primary);
+        }
+
+        .btn-soft-indigo:hover {
+            background-color: var(--primary-soft-hover);
+        }
+
+        .btn-soft-rose {
+            background-color: var(--rose-bg);
+            border-color: var(--rose-border);
+            color: var(--rose-text);
+        }
+
+        .btn-soft-rose:hover {
+            background-color: var(--rose-bg-hover);
+        }
+
+        .btn-dark {
+            background-color: #0f172a;
+            color: #ffffff;
+        }
+
+        .btn-dark:hover {
+            background-color: #1e293b;
+        }
+
+        /* Main Container & Grid */
+        .main-container {
+            flex: 1;
+            max-width: 72rem;
+            width: 100%;
+            margin: 0 auto;
+            padding: 1.75rem 1.25rem;
+        }
+
+        .banner-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 1rem 1.25rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .banner-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.8125rem;
+            color: var(--text-muted);
+        }
+
+        .banner-info strong {
+            color: var(--text-main);
+            font-weight: 600;
+        }
+
+        .banner-actions {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (min-width: 1024px) {
+            .dashboard-grid {
+                grid-template-columns: 7fr 5fr;
+            }
+        }
+
+        .left-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* Cards */
+        .card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+        }
+
+        .card-padded {
+            padding: 1.5rem;
+        }
+
+        /* Terminal Preview Card */
+        .terminal-bar {
+            background-color: var(--terminal-header);
+            color: #cbd5e1;
+            padding: 0.75rem 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+
+        .terminal-dots {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+        }
+
+        .dot {
+            width: 0.625rem;
+            height: 0.625rem;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .dot-red { background-color: #f43f5e; }
+        .dot-amber { background-color: #fbbf24; }
+        .dot-green { background-color: #10b981; }
+
+        .terminal-filename {
+            margin-left: 0.4rem;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+
+        .terminal-timestamp {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--text-light);
+        }
+
+        .terminal-screen {
+            background-color: var(--terminal-body);
+            color: var(--terminal-text);
+            padding: 2rem 1.5rem;
+            min-height: 11.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .terminal-label {
+            font-family: var(--font-mono);
+            font-size: 0.6875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .terminal-value {
+            font-family: var(--font-mono);
+            font-size: clamp(2.5rem, 6vw, 3.75rem);
+            font-weight: 700;
+            line-height: 1.1;
+            word-break: break-all;
+        }
+
+        .card-footer {
+            background-color: var(--bg-page);
+            border-top: 1px solid var(--border-color);
+            padding: 0.75rem 1.25rem;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+        }
+
+        .footer-hint {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .footer-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        /* Controls Form */
+        .section-title {
+            margin: 0 0 0.25rem 0;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .section-desc {
+            margin: 0 0 1.25rem 0;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .update-form {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        @media (min-width: 640px) {
+            .update-form {
+                flex-direction: row;
+            }
+        }
+
+        .number-input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-input);
+            font-family: var(--font-mono);
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-main);
+            background-color: var(--bg-card);
+            outline: none;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .number-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+        }
+
+        .quick-label {
+            display: block;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 0.625rem;
+        }
+
+        .quick-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.625rem;
+        }
+
+        @media (min-width: 640px) {
+            .quick-grid {
+                grid-template-columns: repeat(5, 1fr);
+            }
+        }
+
+        .quick-btn {
+            padding: 0.625rem 0.75rem;
+            border-radius: var(--radius-md);
+            font-family: var(--font-mono);
+            font-size: 0.875rem;
+            font-weight: 600;
+            justify-content: center;
+        }
+
+        .reset-btn {
+            grid-column: span 2;
+            font-family: var(--font-sans);
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        @media (min-width: 640px) {
+            .reset-btn {
+                grid-column: span 1;
+            }
+        }
+
+        /* History Panel */
+        .history-card {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .history-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .count-pill {
+            padding: 0.25rem 0.625rem;
+            border-radius: var(--radius-full);
+            font-size: 0.75rem;
+            font-weight: 500;
+            background-color: var(--bg-subtle);
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .history-list {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.625rem;
+            overflow-y: auto;
+            max-height: 26rem;
+            padding-right: 0.25rem;
+        }
+
+        .history-empty {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-light);
+            font-size: 0.75rem;
+        }
+
+        .history-item {
+            padding: 0.75rem;
+            border-radius: var(--radius-md);
+            background-color: var(--bg-page);
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+        }
+
+        .history-values {
+            font-family: var(--font-mono);
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .history-prev {
+            color: var(--text-light);
+            text-decoration: line-through;
+            font-weight: 500;
+        }
+
+        .history-new {
+            color: var(--primary);
+        }
+
+        .history-meta {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-top: 0.15rem;
+        }
+
+        .history-time {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--text-light);
+            white-space: nowrap;
+            text-align: right;
+        }
+
+        @media (max-width: 639px) {
+            .hide-mobile {
+                display: none !important;
+            }
         }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-900 antialiased selection:bg-indigo-100 selection:text-indigo-900">
+<body>
 
-    <!-- Toast / Notification Container (Replaces alert()) -->
-    <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+    <!-- Toast / Notification Container -->
+    <div id="toast-container"></div>
 
     <!-- ===================================================================== -->
     <!-- VIEW 1: RAW OUTPUT PAGE (#output or ?raw=1)                           -->
     <!-- ===================================================================== -->
-    <div id="output-view" class="hidden min-h-screen w-full relative">
+    <div id="output-view" class="hidden">
         <!-- Pure Plain-Text Preformatted Area -->
-        <pre id="raw-output-text" class="font-mono text-base sm:text-lg p-4 m-0 whitespace-pre-wrap break-all select-all">0</pre>
+        <pre id="raw-output-text">0</pre>
 
-        <!-- Floating Subtle Controls (Hidden in Pure Raw Mode) -->
-        <div id="output-chrome" class="fixed bottom-4 right-4 flex flex-wrap items-center gap-2 bg-white/90 backdrop-blur-md border border-slate-200 shadow-lg rounded-xl p-2 transition-opacity duration-200">
-            <span id="output-sync-badge" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        <!-- Floating Subtle Controls (Hidden in Pure .txt Mode) -->
+        <div id="output-chrome">
+            <span class="sync-badge">
+                <span class="sync-dot"></span>
                 Live Synced
             </span>
-            <button id="btn-toggle-theme" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer" title="Switch Light/Dark Terminal">
+            <button id="btn-toggle-theme" type="button" class="btn btn-sm btn-subtle" title="Switch Light/Dark Terminal">
                 Dark Mode
             </button>
-            <button id="btn-pure-raw" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer" title="Hide all UI buttons for pure .txt look">
+            <button id="btn-pure-raw" type="button" class="btn btn-sm btn-subtle" title="Hide all UI buttons for pure .txt look">
                 Pure .txt Mode
             </button>
-            <button id="btn-output-download" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 transition cursor-pointer">
+            <button id="btn-output-download" type="button" class="btn btn-sm btn-soft-indigo">
                 Download .txt
             </button>
-            <button id="btn-go-dashboard" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-900 hover:bg-slate-800 text-white transition cursor-pointer">
+            <button id="btn-go-dashboard" type="button" class="btn btn-sm btn-dark">
                 Admin Dashboard &rarr;
             </button>
         </div>
 
-        <!-- Tiny Invisible/Subtle Corner Trigger to Restore UI in Pure .txt Mode -->
-        <button id="btn-restore-chrome" class="hidden fixed bottom-2 right-2 opacity-20 hover:opacity-100 focus:opacity-100 px-2 py-1 text-[11px] font-mono bg-slate-800 text-white rounded transition cursor-pointer">
+        <!-- Subtle Corner Trigger to Restore UI in Pure .txt Mode -->
+        <button id="btn-restore-chrome" type="button" class="hidden">
             Show Controls
         </button>
     </div>
 
     <!-- ===================================================================== -->
-    <!-- VIEW 2: ADMIN DASHBOARD & AUTH GATEWAY (#dashboard)                   -->
+    <!-- VIEW 2: ADMIN DASHBOARD (#dashboard)                                  -->
     <!-- ===================================================================== -->
-    <div id="dashboard-view" class="hidden min-h-screen flex flex-col">
+    <div id="dashboard-view" class="hidden">
         
         <!-- Top Navigation Bar -->
-        <header class="bg-white border-b border-slate-200 sticky top-0 z-30">
-            <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
-                <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-mono font-bold text-lg shadow-sm">
-                        #
-                    </div>
+        <header class="app-header">
+            <div class="header-inner">
+                <div class="brand">
+                    <div class="brand-logo">#</div>
                     <div>
-                        <h1 class="font-bold text-slate-900 text-base sm:text-lg leading-tight">NumberSync</h1>
-                        <p class="text-xs text-slate-500 hidden sm:block">Real-time .txt Output Controller</p>
+                        <h1 class="brand-title">NumberSync</h1>
+                        <p class="brand-subtitle hide-mobile">Real-time .txt Output Controller</p>
                     </div>
                 </div>
 
-                <div class="flex items-center gap-2 sm:gap-3">
-                    <!-- Status Pill -->
-                    <div id="header-sync-status" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <div class="header-actions">
+                    <div class="sync-badge hide-mobile">
+                        <span class="sync-dot"></span>
                         <span>Live Synced</span>
                     </div>
 
-                    <!-- Switch to Output Page Button -->
-                    <a href="#output" id="nav-open-output" class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium bg-slate-100 hover:bg-slate-200 text-slate-800 transition">
-                        <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <a href="#output" id="nav-open-output" class="btn btn-subtle">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                         </svg>
                         <span>View Output Page</span>
@@ -115,61 +780,56 @@
             </div>
         </header>
 
-        <!-- ================================================================= -->
-        <!-- MAIN ADMIN CONTROL PANEL (Direct Access — No Login Required)      -->
-        <!-- ================================================================= -->
-        <main id="admin-panel" class="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8 fade-in">
+        <!-- Main Admin Control Panel -->
+        <main class="main-container fade-in">
             
             <!-- Status & Quick Link Banner -->
-            <div class="bg-white rounded-2xl border border-slate-200 p-4 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
-                <div class="flex items-center gap-3">
-                    <div class="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
-                    <div class="text-xs sm:text-sm text-slate-600">
-                        <span class="font-semibold text-slate-900">Instant Sync Active</span>
-                        <span class="hidden md:inline text-slate-400 mx-1">&bull;</span>
-                        <span class="block md:inline text-xs text-slate-500">Changes broadcast live across open tabs via local storage</span>
+            <div class="banner-card">
+                <div class="banner-info">
+                    <span class="sync-dot"></span>
+                    <div>
+                        <strong>Instant Sync Active</strong>
+                        <span class="hide-mobile"> &bull; Changes broadcast live across open tabs via local storage</span>
                     </div>
                 </div>
-                <div class="flex flex-wrap items-center gap-2">
-                    <button id="btn-copy-output-url" type="button" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer">
+                <div class="banner-actions">
+                    <button id="btn-copy-output-url" type="button" class="btn btn-sm btn-subtle">
                         Copy Raw Output Link
                     </button>
-                    <a href="#output" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-indigo-50 hover:bg-indigo-100 text-indigo-700 transition">
+                    <a href="#output" target="_blank" rel="noopener" class="btn btn-sm btn-soft-indigo">
                         Open .txt in New Tab &#8599;
                     </a>
                 </div>
             </div>
 
-            <!-- Main Grid Layout -->
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <!-- Two-Column Dashboard Grid -->
+            <div class="dashboard-grid">
                 
-                <!-- Left Column: Live Preview & Number Controls (7 cols) -->
-                <div class="lg:col-span-7 space-y-6">
+                <!-- Left Column: Live Preview & Number Controls -->
+                <div class="left-stack">
                     
                     <!-- Live Output Preview Card -->
-                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                        <div class="px-5 py-3.5 bg-slate-900 text-slate-300 flex items-center justify-between">
-                            <div class="flex items-center gap-2">
-                                <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
-                                <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
-                                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-                                <span class="ml-2 font-mono text-xs text-slate-400">output.txt — Live Preview</span>
+                    <div class="card">
+                        <div class="terminal-bar">
+                            <div class="terminal-dots">
+                                <span class="dot dot-red"></span>
+                                <span class="dot dot-amber"></span>
+                                <span class="dot dot-green"></span>
+                                <span class="terminal-filename">output.txt — Live Preview</span>
                             </div>
-                            <span id="last-updated-badge" class="text-[11px] font-mono text-slate-400">Synced</span>
+                            <span id="last-updated-badge" class="terminal-timestamp">Synced</span>
                         </div>
-                        <div class="p-6 sm:p-8 bg-slate-950 text-emerald-400 flex flex-col items-center justify-center min-h-[180px] relative">
-                            <span class="text-[11px] font-mono uppercase tracking-widest text-slate-500 mb-2">Current Raw Output Value</span>
-                            <div id="dashboard-live-number" class="font-mono text-5xl sm:text-6xl font-bold tracking-tight break-all text-center">
-                                0
-                            </div>
+                        <div class="terminal-screen">
+                            <span class="terminal-label">Current Raw Output Value</span>
+                            <div id="dashboard-live-number" class="terminal-value">0</div>
                         </div>
-                        <div class="px-5 py-3 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2">
-                            <span class="text-xs text-slate-500">Updates propagate instantly to all open output tabs.</span>
-                            <div class="flex items-center gap-2">
-                                <button id="btn-copy-number" type="button" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 transition cursor-pointer">
+                        <div class="card-footer">
+                            <span class="footer-hint">Updates propagate instantly to all open output tabs.</span>
+                            <div class="footer-buttons">
+                                <button id="btn-copy-number" type="button" class="btn btn-sm btn-outline">
                                     Copy Number
                                 </button>
-                                <button id="btn-dash-download" type="button" class="px-3 py-1.5 rounded-lg text-xs font-medium bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 transition cursor-pointer">
+                                <button id="btn-dash-download" type="button" class="btn btn-sm btn-outline">
                                     Download output.txt
                                 </button>
                             </div>
@@ -177,58 +837,45 @@
                     </div>
 
                     <!-- Update Number Controls Card -->
-                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6">
-                        <h3 class="text-base font-bold text-slate-900 mb-1">Update Output Number</h3>
-                        <p class="text-xs text-slate-500 mb-5">Enter an exact number below or use quick step adjustments.</p>
+                    <div class="card card-padded">
+                        <h3 class="section-title">Update Output Number</h3>
+                        <p class="section-desc">Enter an exact number below or use quick step adjustments.</p>
 
                         <!-- Direct Number Input Form -->
-                        <form id="update-number-form" class="flex flex-col sm:flex-row gap-3 mb-6">
-                            <input id="number-input" type="number" step="any" required placeholder="Enter new number (e.g. 42)" class="flex-1 px-4 py-3 rounded-xl border border-slate-300 font-mono text-lg font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
-                            <button type="submit" class="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-semibold text-sm shadow-sm transition cursor-pointer whitespace-nowrap">
+                        <form id="update-number-form" class="update-form">
+                            <input id="number-input" class="number-input" type="number" step="any" required placeholder="Enter new number (e.g. 42)">
+                            <button type="submit" class="btn btn-lg btn-primary">
                                 Update Number
                             </button>
                         </form>
 
                         <!-- Quick Increment / Decrement Controls -->
                         <div>
-                            <span class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2.5">Quick Adjustments</span>
-                            <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
-                                <button type="button" data-delta="-10" class="quick-delta-btn py-2.5 px-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 active:bg-slate-200 font-mono text-sm font-semibold text-slate-700 transition cursor-pointer">
-                                    -10
-                                </button>
-                                <button type="button" data-delta="-1" class="quick-delta-btn py-2.5 px-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 active:bg-slate-200 font-mono text-sm font-semibold text-slate-700 transition cursor-pointer">
-                                    -1
-                                </button>
-                                <button type="button" data-delta="+1" class="quick-delta-btn py-2.5 px-3 rounded-xl border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 active:bg-indigo-200 font-mono text-sm font-semibold text-indigo-700 transition cursor-pointer">
-                                    +1
-                                </button>
-                                <button type="button" data-delta="+10" class="quick-delta-btn py-2.5 px-3 rounded-xl border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 active:bg-indigo-200 font-mono text-sm font-semibold text-indigo-700 transition cursor-pointer">
-                                    +10
-                                </button>
-                                <button type="button" id="btn-reset-zero" class="col-span-2 sm:col-span-1 py-2.5 px-3 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 active:bg-rose-200 text-xs font-semibold text-rose-700 transition cursor-pointer">
-                                    Reset to 0
-                                </button>
+                            <span class="quick-label">Quick Adjustments</span>
+                            <div class="quick-grid">
+                                <button type="button" data-delta="-10" class="btn btn-outline quick-btn quick-delta-btn">-10</button>
+                                <button type="button" data-delta="-1" class="btn btn-outline quick-btn quick-delta-btn">-1</button>
+                                <button type="button" data-delta="+1" class="btn btn-soft-indigo quick-btn quick-delta-btn">+1</button>
+                                <button type="button" data-delta="+10" class="btn btn-soft-indigo quick-btn quick-delta-btn">+10</button>
+                                <button type="button" id="btn-reset-zero" class="btn btn-soft-rose quick-btn reset-btn">Reset to 0</button>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Right Column: Audit / Change History Log (5 cols) -->
-                <div class="lg:col-span-5">
-                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6 h-full flex flex-col">
-                        <div class="flex items-center justify-between mb-4">
+                <!-- Right Column: Change History Log -->
+                <div>
+                    <div class="card card-padded history-card">
+                        <div class="history-header">
                             <div>
-                                <h3 class="text-base font-bold text-slate-900">Change History</h3>
-                                <p class="text-xs text-slate-500">Recent updates to output.txt</p>
+                                <h3 class="section-title">Change History</h3>
+                                <p class="section-desc" style="margin-bottom: 0;">Recent updates to output.txt</p>
                             </div>
-                            <span id="history-count-badge" class="px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
-                                0 updates
-                            </span>
+                            <span id="history-count-badge" class="count-pill">0 updates</span>
                         </div>
 
-                        <!-- History Feed List -->
-                        <div id="history-list" class="flex-1 space-y-2.5 overflow-y-auto max-h-[420px] pr-1">
-                            <div class="text-center py-12 text-slate-400 text-xs">
+                        <div id="history-list" class="history-list">
+                            <div class="history-empty">
                                 No updates recorded yet. Change the number to see history here.
                             </div>
                         </div>
@@ -243,341 +890,326 @@
     <!-- CLIENT-SIDE PERSISTENCE & CROSS-TAB SYNC LOGIC                        -->
     <!-- ===================================================================== -->
     <script>
-        // ---------------------------------------------------------------------
-        // 1. Storage Keys & BroadcastChannel Setup
-        // ---------------------------------------------------------------------
-        const STORAGE_STATE_KEY = 'numbersync_current_state_v1';
-        const STORAGE_HISTORY_KEY = 'numbersync_change_history_v1';
-        const CHANNEL_NAME = 'numbersync_live_channel';
+        (function () {
+            'use strict';
 
-        const syncChannel = typeof BroadcastChannel !== 'undefined'
-            ? new BroadcastChannel(CHANNEL_NAME)
-            : null;
+            // -----------------------------------------------------------------
+            // 1. Storage Keys & BroadcastChannel Setup
+            // -----------------------------------------------------------------
+            const STORAGE_STATE_KEY = 'numbersync_current_state_v1';
+            const STORAGE_HISTORY_KEY = 'numbersync_change_history_v1';
+            const CHANNEL_NAME = 'numbersync_live_channel';
 
-        // ---------------------------------------------------------------------
-        // 2. Application State
-        // ---------------------------------------------------------------------
-        let currentNumber = 0;
-        let lastUpdatedAt = null;
-        let historyItems = [];
-        let isDarkOutput = false;
+            const syncChannel = typeof BroadcastChannel !== 'undefined'
+                ? new BroadcastChannel(CHANNEL_NAME)
+                : null;
 
-        // ---------------------------------------------------------------------
-        // 3. DOM Elements
-        // ---------------------------------------------------------------------
-        const outputView = document.getElementById('output-view');
-        const dashboardView = document.getElementById('dashboard-view');
-        const rawOutputText = document.getElementById('raw-output-text');
-        const outputChrome = document.getElementById('output-chrome');
-        const btnRestoreChrome = document.getElementById('btn-restore-chrome');
+            // -----------------------------------------------------------------
+            // 2. Application State
+            // -----------------------------------------------------------------
+            let currentNumber = 0;
+            let lastUpdatedAt = null;
+            let historyItems = [];
+            let isDarkOutput = false;
 
-        const dashboardLiveNumber = document.getElementById('dashboard-live-number');
-        const lastUpdatedBadge = document.getElementById('last-updated-badge');
-        const updateNumberForm = document.getElementById('update-number-form');
-        const numberInput = document.getElementById('number-input');
-        const historyList = document.getElementById('history-list');
-        const historyCountBadge = document.getElementById('history-count-badge');
+            // -----------------------------------------------------------------
+            // 3. DOM References
+            // -----------------------------------------------------------------
+            const outputView = document.getElementById('output-view');
+            const dashboardView = document.getElementById('dashboard-view');
+            const rawOutputText = document.getElementById('raw-output-text');
+            const outputChrome = document.getElementById('output-chrome');
+            const btnRestoreChrome = document.getElementById('btn-restore-chrome');
 
-        // ---------------------------------------------------------------------
-        // 4. Utility Functions (Toasts, Clipboard, Download)
-        // ---------------------------------------------------------------------
-        function showToast(message, type = 'success') {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            const colors = type === 'error'
-                ? 'bg-rose-600 text-white'
-                : 'bg-slate-900 text-white';
-            toast.className = `${colors} px-4 py-2.5 rounded-xl shadow-lg text-xs font-medium flex items-center gap-2 fade-in pointer-events-auto`;
-            toast.textContent = message;
-            container.appendChild(toast);
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transition = 'opacity 0.2s ease';
-                setTimeout(() => toast.remove(), 200);
-            }, 3000);
-        }
+            const dashboardLiveNumber = document.getElementById('dashboard-live-number');
+            const lastUpdatedBadge = document.getElementById('last-updated-badge');
+            const updateNumberForm = document.getElementById('update-number-form');
+            const numberInput = document.getElementById('number-input');
+            const historyList = document.getElementById('history-list');
+            const historyCountBadge = document.getElementById('history-count-badge');
 
-        function copyTextToClipboard(text, successMsg) {
-            const textarea = document.createElement('textarea');
-            textarea.value = text;
-            textarea.style.position = 'fixed';
-            textarea.style.opacity = '0';
-            document.body.appendChild(textarea);
-            textarea.select();
-            try {
-                document.execCommand('copy');
-                showToast(successMsg || 'Copied to clipboard!');
-            } catch (err) {
-                showToast('Failed to copy text', 'error');
+            // -----------------------------------------------------------------
+            // 4. Utility Functions (Toasts, Clipboard, Download)
+            // -----------------------------------------------------------------
+            function showToast(message, type) {
+                const container = document.getElementById('toast-container');
+                const toast = document.createElement('div');
+                toast.className = type === 'error' ? 'toast error' : 'toast';
+                toast.textContent = message;
+                container.appendChild(toast);
+
+                setTimeout(function () {
+                    toast.style.opacity = '0';
+                    setTimeout(function () {
+                        toast.remove();
+                    }, 200);
+                }, 3000);
             }
-            document.body.removeChild(textarea);
-        }
 
-        function downloadOutputTxt() {
-            const blob = new Blob([String(currentNumber)], { type: 'text/plain;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'output.txt';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            showToast('Downloaded output.txt');
-        }
-
-        function formatTimestamp(ms) {
-            if (!ms) return 'Just now';
-            const d = new Date(ms);
-            return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) +
-                   ' · ' + d.toLocaleDateString([], { month: 'short', day: 'numeric' });
-        }
-
-        // ---------------------------------------------------------------------
-        // 5. Persistence & Real-Time Cross-Tab Sync
-        // ---------------------------------------------------------------------
-        function loadFromStorage() {
-            try {
-                const rawState = localStorage.getItem(STORAGE_STATE_KEY);
-                if (rawState) {
-                    const parsed = JSON.parse(rawState);
-                    currentNumber = parsed.value !== undefined ? Number(parsed.value) : 0;
-                    lastUpdatedAt = parsed.updatedAt || null;
-                } else {
-                    currentNumber = 0;
-                    lastUpdatedAt = null;
+            function copyTextToClipboard(text, successMsg) {
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.select();
+                try {
+                    document.execCommand('copy');
+                    showToast(successMsg || 'Copied to clipboard!');
+                } catch (err) {
+                    showToast('Failed to copy text', 'error');
                 }
-
-                const rawHistory = localStorage.getItem(STORAGE_HISTORY_KEY);
-                historyItems = rawHistory ? JSON.parse(rawHistory) : [];
-                if (!Array.isArray(historyItems)) historyItems = [];
-            } catch (err) {
-                console.error('Error reading localStorage:', err);
-            }
-            renderAll();
-        }
-
-        function renderAll() {
-            // Update Output View
-            rawOutputText.textContent = String(currentNumber);
-            if (isOutputRoute()) {
-                document.title = `${currentNumber} — output.txt`;
+                document.body.removeChild(textarea);
             }
 
-            // Update Dashboard Preview
-            dashboardLiveNumber.textContent = String(currentNumber);
-            if (lastUpdatedAt) {
-                lastUpdatedBadge.textContent = `Updated ${formatTimestamp(lastUpdatedAt)}`;
-            } else {
-                lastUpdatedBadge.textContent = 'Synced';
+            function downloadOutputTxt() {
+                const blob = new Blob([String(currentNumber)], { type: 'text/plain;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'output.txt';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showToast('Downloaded output.txt');
             }
 
-            renderHistoryList(historyItems.slice(0, 30));
-        }
-
-        function renderHistoryList(items) {
-            historyCountBadge.textContent = `${items.length} ${items.length === 1 ? 'update' : 'updates'}`;
-
-            if (items.length === 0) {
-                historyList.innerHTML = `
-                    <div class="text-center py-12 text-slate-400 text-xs">
-                        No updates recorded yet. Change the number to see history here.
-                    </div>
-                `;
-                return;
+            function formatTimestamp(ms) {
+                if (!ms) return 'Just now';
+                const d = new Date(ms);
+                return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) +
+                       ' · ' + d.toLocaleDateString([], { month: 'short', day: 'numeric' });
             }
 
-            historyList.innerHTML = items.map(item => {
-                const prevText = item.previousValue !== undefined
-                    ? `<span class="text-slate-400 line-through mr-1.5">${item.previousValue}</span>&rarr;`
-                    : '';
-                return `
-                    <div class="p-3 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-3">
-                        <div class="min-w-0">
-                            <div class="flex items-center gap-1.5 font-mono text-sm font-bold text-slate-900">
-                                ${prevText}
-                                <span class="text-indigo-600">${item.newValue}</span>
-                            </div>
-                            <div class="text-[11px] text-slate-500 truncate mt-0.5">
-                                Dashboard Update
-                            </div>
-                        </div>
-                        <div class="text-[11px] font-mono text-slate-400 whitespace-nowrap text-right">
-                            ${formatTimestamp(item.timestamp)}
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function publishNewNumber(newValue) {
-            const numericVal = Number(newValue);
-            if (isNaN(numericVal)) {
-                showToast('Please enter a valid number.', 'error');
-                return;
-            }
-
-            const prevVal = currentNumber;
-            const now = Date.now();
-
-            currentNumber = numericVal;
-            lastUpdatedAt = now;
-
-            const entry = {
-                previousValue: prevVal,
-                newValue: numericVal,
-                timestamp: now
-            };
-
-            historyItems = [entry, ...historyItems].slice(0, 50);
-
-            try {
-                localStorage.setItem(STORAGE_STATE_KEY, JSON.stringify({
-                    value: currentNumber,
-                    updatedAt: lastUpdatedAt
-                }));
-                localStorage.setItem(STORAGE_HISTORY_KEY, JSON.stringify(historyItems));
-            } catch (err) {
-                console.error('Failed to write localStorage:', err);
-            }
-
-            // Broadcast immediately to any other open tabs/windows
-            if (syncChannel) {
-                syncChannel.postMessage({
-                    type: 'NUMBER_UPDATED',
-                    value: currentNumber,
-                    updatedAt: lastUpdatedAt,
-                    history: historyItems
-                });
-            }
-
-            renderAll();
-            showToast(`Output updated to ${numericVal}`);
-        }
-
-        // Listen for updates from other open tabs via BroadcastChannel
-        if (syncChannel) {
-            syncChannel.onmessage = (event) => {
-                if (event.data && event.data.type === 'NUMBER_UPDATED') {
-                    currentNumber = Number(event.data.value);
-                    lastUpdatedAt = event.data.updatedAt || Date.now();
-                    if (Array.isArray(event.data.history)) {
-                        historyItems = event.data.history;
+            // -----------------------------------------------------------------
+            // 5. Persistence & Real-Time Cross-Tab Sync
+            // -----------------------------------------------------------------
+            function loadFromStorage() {
+                try {
+                    const rawState = localStorage.getItem(STORAGE_STATE_KEY);
+                    if (rawState) {
+                        const parsed = JSON.parse(rawState);
+                        currentNumber = parsed.value !== undefined ? Number(parsed.value) : 0;
+                        lastUpdatedAt = parsed.updatedAt || null;
+                    } else {
+                        currentNumber = 0;
+                        lastUpdatedAt = null;
                     }
-                    renderAll();
+
+                    const rawHistory = localStorage.getItem(STORAGE_HISTORY_KEY);
+                    historyItems = rawHistory ? JSON.parse(rawHistory) : [];
+                    if (!Array.isArray(historyItems)) historyItems = [];
+                } catch (err) {
+                    currentNumber = 0;
+                    historyItems = [];
                 }
-            };
-        }
-
-        // Fallback listener for cross-tab localStorage changes
-        window.addEventListener('storage', (event) => {
-            if (event.key === STORAGE_STATE_KEY || event.key === STORAGE_HISTORY_KEY) {
-                loadFromStorage();
+                renderAll();
             }
-        });
 
-        // ---------------------------------------------------------------------
-        // 6. Routing Logic (#output / ?raw=1 vs #dashboard)
-        // ---------------------------------------------------------------------
-        function isOutputRoute() {
-            const hash = window.location.hash.toLowerCase();
-            const params = new URLSearchParams(window.location.search);
-            return hash === '#output' || params.get('view') === 'txt' || params.get('raw') === '1';
-        }
-
-        function handleRouteChange() {
-            const params = new URLSearchParams(window.location.search);
-            const pureRaw = params.get('raw') === '1';
-
-            if (isOutputRoute()) {
-                dashboardView.classList.add('hidden');
-                outputView.classList.remove('hidden');
-                document.title = `${currentNumber} — output.txt`;
-
-                if (pureRaw) {
-                    outputChrome.classList.add('hidden');
-                    btnRestoreChrome.classList.remove('hidden');
+            function renderAll() {
+                // Update Output View
+                rawOutputText.textContent = String(currentNumber);
+                if (isOutputRoute()) {
+                    document.title = currentNumber + ' — output.txt';
                 }
-            } else {
-                outputView.classList.add('hidden');
-                dashboardView.classList.remove('hidden');
-                document.title = 'NumberSync — Dashboard';
+
+                // Update Dashboard Preview
+                dashboardLiveNumber.textContent = String(currentNumber);
+                lastUpdatedBadge.textContent = lastUpdatedAt
+                    ? 'Updated ' + formatTimestamp(lastUpdatedAt)
+                    : 'Synced';
+
+                renderHistoryList(historyItems.slice(0, 30));
             }
-        }
 
-        window.addEventListener('hashchange', handleRouteChange);
+            function renderHistoryList(items) {
+                historyCountBadge.textContent = items.length + (items.length === 1 ? ' update' : ' updates');
 
-        // ---------------------------------------------------------------------
-        // 7. Interactive Event Listeners
-        // ---------------------------------------------------------------------
+                if (items.length === 0) {
+                    historyList.innerHTML = '<div class="history-empty">No updates recorded yet. Change the number to see history here.</div>';
+                    return;
+                }
 
-        // Direct Number Form Submit
-        updateNumberForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const val = numberInput.value;
-            if (val === '') return;
-            publishNewNumber(val);
-            numberInput.value = '';
-        });
+                historyList.innerHTML = items.map(function (item) {
+                    const prevHtml = item.previousValue !== undefined
+                        ? '<span class="history-prev">' + item.previousValue + '</span><span>&rarr;</span>'
+                        : '';
+                    return (
+                        '<div class="history-item">' +
+                            '<div>' +
+                                '<div class="history-values">' +
+                                    prevHtml +
+                                    '<span class="history-new">' + item.newValue + '</span>' +
+                                '</div>' +
+                                '<div class="history-meta">Dashboard Update</div>' +
+                            '</div>' +
+                            '<div class="history-time">' + formatTimestamp(item.timestamp) + '</div>' +
+                        '</div>'
+                    );
+                }).join('');
+            }
 
-        // Quick Increment / Decrement Buttons
-        document.querySelectorAll('.quick-delta-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const delta = Number(btn.getAttribute('data-delta'));
-                publishNewNumber(Number(currentNumber) + delta);
+            function publishNewNumber(newValue) {
+                const numericVal = Number(newValue);
+                if (isNaN(numericVal)) {
+                    showToast('Please enter a valid number.', 'error');
+                    return;
+                }
+
+                const prevVal = currentNumber;
+                const now = Date.now();
+
+                currentNumber = numericVal;
+                lastUpdatedAt = now;
+
+                const entry = {
+                    previousValue: prevVal,
+                    newValue: numericVal,
+                    timestamp: now
+                };
+
+                historyItems = [entry].concat(historyItems).slice(0, 50);
+
+                try {
+                    localStorage.setItem(STORAGE_STATE_KEY, JSON.stringify({
+                        value: currentNumber,
+                        updatedAt: lastUpdatedAt
+                    }));
+                    localStorage.setItem(STORAGE_HISTORY_KEY, JSON.stringify(historyItems));
+                } catch (err) {
+                    showToast('Unable to save to browser storage.', 'error');
+                }
+
+                if (syncChannel) {
+                    syncChannel.postMessage({
+                        type: 'NUMBER_UPDATED',
+                        value: currentNumber,
+                        updatedAt: lastUpdatedAt,
+                        history: historyItems
+                    });
+                }
+
+                renderAll();
+                showToast('Output updated to ' + numericVal);
+            }
+
+            // Listen for updates from other open tabs via BroadcastChannel
+            if (syncChannel) {
+                syncChannel.onmessage = function (event) {
+                    if (event.data && event.data.type === 'NUMBER_UPDATED') {
+                        currentNumber = Number(event.data.value);
+                        lastUpdatedAt = event.data.updatedAt || Date.now();
+                        if (Array.isArray(event.data.history)) {
+                            historyItems = event.data.history;
+                        }
+                        renderAll();
+                    }
+                };
+            }
+
+            // Fallback listener for cross-tab localStorage changes
+            window.addEventListener('storage', function (event) {
+                if (event.key === STORAGE_STATE_KEY || event.key === STORAGE_HISTORY_KEY) {
+                    loadFromStorage();
+                }
             });
-        });
 
-        // Reset to 0 Button
-        document.getElementById('btn-reset-zero').addEventListener('click', () => {
-            publishNewNumber(0);
-        });
-
-        // Copy & Download Buttons (Dashboard)
-        document.getElementById('btn-copy-number').addEventListener('click', () => {
-            copyTextToClipboard(String(currentNumber), `Copied "${currentNumber}" to clipboard`);
-        });
-
-        document.getElementById('btn-dash-download').addEventListener('click', downloadOutputTxt);
-
-        document.getElementById('btn-copy-output-url').addEventListener('click', () => {
-            const baseUrl = window.location.href.split('#')[0].split('?')[0];
-            copyTextToClipboard(`${baseUrl}#output`, 'Copied Output Page URL!');
-        });
-
-        // Output Page Controls
-        document.getElementById('btn-output-download').addEventListener('click', downloadOutputTxt);
-
-        document.getElementById('btn-go-dashboard').addEventListener('click', () => {
-            window.location.hash = '#dashboard';
-        });
-
-        // Toggle Light/Dark Terminal Theme on Output Page
-        document.getElementById('btn-toggle-theme').addEventListener('click', (e) => {
-            isDarkOutput = !isDarkOutput;
-            if (isDarkOutput) {
-                outputView.classList.add('bg-slate-950', 'text-emerald-400');
-                e.target.textContent = 'Light Mode';
-            } else {
-                outputView.classList.remove('bg-slate-950', 'text-emerald-400');
-                e.target.textContent = 'Dark Mode';
+            // -----------------------------------------------------------------
+            // 6. Routing Logic (#output / ?raw=1 vs #dashboard)
+            // -----------------------------------------------------------------
+            function isOutputRoute() {
+                const hash = window.location.hash.toLowerCase();
+                const params = new URLSearchParams(window.location.search);
+                return hash === '#output' || params.get('view') === 'txt' || params.get('raw') === '1';
             }
-        });
 
-        // Pure .txt Mode (Hides all floating buttons)
-        document.getElementById('btn-pure-raw').addEventListener('click', () => {
-            outputChrome.classList.add('hidden');
-            btnRestoreChrome.classList.remove('hidden');
-        });
+            function handleRouteChange() {
+                const params = new URLSearchParams(window.location.search);
+                const pureRaw = params.get('raw') === '1';
 
-        btnRestoreChrome.addEventListener('click', () => {
-            btnRestoreChrome.classList.add('hidden');
-            outputChrome.classList.remove('hidden');
-        });
+                if (isOutputRoute()) {
+                    dashboardView.classList.add('hidden');
+                    outputView.classList.remove('hidden');
+                    document.title = currentNumber + ' — output.txt';
 
-        // Boot Application Immediately
-        loadFromStorage();
-        handleRouteChange();
+                    if (pureRaw) {
+                        outputChrome.classList.add('hidden');
+                        btnRestoreChrome.classList.remove('hidden');
+                    }
+                } else {
+                    outputView.classList.add('hidden');
+                    dashboardView.classList.remove('hidden');
+                    document.title = 'NumberSync — Dashboard';
+                }
+            }
+
+            window.addEventListener('hashchange', handleRouteChange);
+
+            // -----------------------------------------------------------------
+            // 7. Interactive Event Listeners
+            // -----------------------------------------------------------------
+            updateNumberForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const val = numberInput.value;
+                if (val === '') return;
+                publishNewNumber(val);
+                numberInput.value = '';
+            });
+
+            document.querySelectorAll('.quick-delta-btn').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    const delta = Number(btn.getAttribute('data-delta'));
+                    publishNewNumber(Number(currentNumber) + delta);
+                });
+            });
+
+            document.getElementById('btn-reset-zero').addEventListener('click', function () {
+                publishNewNumber(0);
+            });
+
+            document.getElementById('btn-copy-number').addEventListener('click', function () {
+                copyTextToClipboard(String(currentNumber), 'Copied "' + currentNumber + '" to clipboard');
+            });
+
+            document.getElementById('btn-dash-download').addEventListener('click', downloadOutputTxt);
+
+            document.getElementById('btn-copy-output-url').addEventListener('click', function () {
+                const baseUrl = window.location.href.split('#')[0].split('?')[0];
+                copyTextToClipboard(baseUrl + '#output', 'Copied Output Page URL!');
+            });
+
+            document.getElementById('btn-output-download').addEventListener('click', downloadOutputTxt);
+
+            document.getElementById('btn-go-dashboard').addEventListener('click', function () {
+                window.location.hash = '#dashboard';
+            });
+
+            document.getElementById('btn-toggle-theme').addEventListener('click', function (e) {
+                isDarkOutput = !isDarkOutput;
+                if (isDarkOutput) {
+                    outputView.classList.add('dark-terminal');
+                    e.target.textContent = 'Light Mode';
+                } else {
+                    outputView.classList.remove('dark-terminal');
+                    e.target.textContent = 'Dark Mode';
+                }
+            });
+
+            document.getElementById('btn-pure-raw').addEventListener('click', function () {
+                outputChrome.classList.add('hidden');
+                btnRestoreChrome.classList.remove('hidden');
+            });
+
+            btnRestoreChrome.addEventListener('click', function () {
+                btnRestoreChrome.classList.add('hidden');
+                outputChrome.classList.remove('hidden');
+            });
+
+            // Boot Application
+            loadFromStorage();
+            handleRouteChange();
+        })();
     </script>
 </body>
 </html>
